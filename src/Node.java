@@ -35,7 +35,7 @@ public class Node {
 	private GUI.TableModel _peerTableModel;
 	private JLabel _statusBar;
 	
-	private ArrayList<Transaction> _transactionPool;
+	private TransactionHistory _transactionPool;
 	private ArrayList<Block> _blockchain;
 	private Product _product;
 	private ProductChangeIterator _productChangeIter;
@@ -49,7 +49,7 @@ public class Node {
 			_address = InetAddress.getLocalHost().getHostAddress();
 			_peers = new ArrayList<Peer>();
 			_peerTableModel = null;
-			_transactionPool = new ArrayList<Transaction>();
+			_transactionPool = new TransactionHistory();
 			_blockchain = new ArrayList<Block>();
 			_product = null;
 			_productChangeIter = null;
@@ -162,10 +162,10 @@ public class Node {
 			{
 				synchronized (_blockchain) 
 				{
-					genesisTX = _product.generateTransaction(Utils.findLastTransaction(_transactionPool, _blockchain), "<initial product>");
+					genesisTX = _product.generateTransaction(_transactionPool, _blockchain, "<initial product>");
 				}
 				
-				_transactionPool.add( genesisTX );
+				_transactionPool.Add(genesisTX);
 			}
 
 			for(Peer p : _peers)
@@ -207,8 +207,8 @@ public class Node {
 			{
 				synchronized (_blockchain) 
 				{
-					tx = _product.generateTransaction(Utils.findLastTransaction(_transactionPool, _blockchain), description);
-					_transactionPool.add( tx );
+					tx = _product.generateTransaction(_transactionPool, _blockchain, description);
+					_transactionPool.Add( tx );
 				}
 			}
 			
@@ -241,7 +241,7 @@ public class Node {
 					_productChangeIter = null;
 				}
 				
-				_transactionPool.clear();
+				_transactionPool.Clear();
 			}
 			
 			Utils.broadcast(block, _peers);
@@ -318,17 +318,17 @@ public class Node {
 			
 			synchronized (_transactionPool) 
 			{
-				Transaction lastTX = Utils.findLastTransaction(_transactionPool, _blockchain);
+				Transaction lastTX = Utils.findLastTransaction(transaction.productID(), _transactionPool, _blockchain);
 				
 				if( transaction.verifySignature(lastTX) )
 				{
-					_transactionPool.add(transaction);
+					_transactionPool.Add(transaction);
 					broadcast = true;
 					
 					System.out.println("Incoming transaction verified and added to the transaction pool.");
 					_statusBar.setText("Incoming transaction verified and added to the transaction pool.");
 				}
-				else if(!_transactionPool.contains(transaction))
+				else if(!_transactionPool.Contains(transaction))
 				{
 					broadcast = true;
 					
@@ -360,13 +360,10 @@ public class Node {
 			{
 				synchronized (_blockchain) 
 				{
-					Transaction lastTX = new ProductChangeIterator(null, _blockchain).retreat();
-					Block lastBlock = Utils.getLast(_blockchain);
-					
-					if( block.verify(lastBlock, lastTX) )
+					if( block.verify(_blockchain) )
 					{
 						_blockchain.add(block);
-						_transactionPool.removeAll(block.transactions());
+						_transactionPool.RemoveAll(block.transactions());
 						_productChangeIter = null;
 						broadcast = true;
 						

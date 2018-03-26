@@ -128,18 +128,19 @@ public class Utils {
 	
 	
 //*********** Blockchain navigation
-	public static Transaction findLastTransaction(ArrayList<Transaction> transactionPool, ArrayList<Block> blockchain)
+	public static Transaction findLastTransaction(String productID, TransactionHistory transactionPool, ArrayList<Block> blockchain)
 	{
+		NULL_CHECK("ProductID", productID);
 		NULL_CHECK("TransactionPool", transactionPool);
 		NULL_CHECK("Blockchain", blockchain);
 		
-		Transaction tx = getLast(transactionPool);
+		Transaction tx = getLast( transactionPool.transactions(productID) );
 		if(tx != null)
 		{
 			return tx;
 		}
 
-		return new ProductChangeIterator(null, blockchain).retreat();
+		return new ProductChangeIterator(productID, blockchain).retreat();
 	}
 	
 	public static <T> T getLast(ArrayList<T> list)

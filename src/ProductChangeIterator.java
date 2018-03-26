@@ -3,55 +3,41 @@ import java.util.ArrayList;
 public class ProductChangeIterator {
 	private String _productID;
 	private TwoWayListIterator<Block> _blockIterator;
-	private TwoWayListIterator<Transaction> _tranactionIterator;
+	private TwoWayListIterator<Transaction> _transactionIterator;
 	
-	///////////////////////////////////////////////////////////////////////////
-	// productID == null : find the last TX for any products in the blockchain
 	public ProductChangeIterator(String productID, ArrayList<Block> blockchain)
 	{
+		Utils.NULL_CHECK("ProductID", productID);
 		Utils.NULL_CHECK("Blockchain", blockchain);
 		
 		_productID = productID;
 		_blockIterator = new TwoWayListIterator<>( blockchain, blockchain.size() );
-		_tranactionIterator = null;
+		_transactionIterator = null;
 	}
 	
 	public Transaction retreat()
 	{
-		TwoWayListIterator<Transaction> beforeTXIter;
-		if(_tranactionIterator != null)
+		if(_transactionIterator != null && _transactionIterator.hasPrevious())
 		{
-			beforeTXIter = _tranactionIterator.copy();
-			while(_tranactionIterator.hasPrevious())
-			{
-				Transaction tx = _tranactionIterator.previous();
-				
-				if(_productID == null || tx.productID().equals(_productID))
-				{
-					return tx;
-				}
-			}
-			_tranactionIterator = beforeTXIter;
+			return _transactionIterator.previous();
 		}
 		
 		TwoWayListIterator<Block> beforeBlockIter = _blockIterator.copy();
-		beforeTXIter = _tranactionIterator != null ? _tranactionIterator.copy() : null;
 		while(_blockIterator.hasPrevious())
 		{
-			ArrayList<Transaction> blockTXs = _blockIterator.previous().transactions();
-			_tranactionIterator = new TwoWayListIterator<>( blockTXs, blockTXs.size() );
-			
-			while(_tranactionIterator.hasPrevious())
+			ArrayList<Transaction> blockTXs = _blockIterator.previous().transactions(_productID);
+			if(blockTXs.size() == 0)
 			{
-				Transaction tx = _tranactionIterator.previous();
-				
-				if(_productID == null || tx.productID().equals(_productID))
-				{
-					return tx;
-				}
+				continue;
+			}
+			
+			_transactionIterator = new TwoWayListIterator<>( blockTXs, blockTXs.size() );
+			
+			if(_transactionIterator.hasPrevious())
+			{
+				return _transactionIterator.previous();
 			}
 		}
-		_tranactionIterator = beforeTXIter;
 		_blockIterator = beforeBlockIter;
 		
 		return null;
@@ -59,40 +45,27 @@ public class ProductChangeIterator {
 	
 	public Transaction advance()
 	{
-		TwoWayListIterator<Transaction> beforeTXIter;
-		if(_tranactionIterator != null)
+		if(_transactionIterator != null && _transactionIterator.hasNext())
 		{
-			beforeTXIter = _tranactionIterator.copy();
-			while(_tranactionIterator.hasNext())
-			{
-				Transaction tx = _tranactionIterator.next();
-				
-				if(_productID == null || tx.productID().equals(_productID))
-				{
-					return tx;
-				}
-			}
-			_tranactionIterator = beforeTXIter;
+			return _transactionIterator.next();
 		}
 
 		TwoWayListIterator<Block> beforeBlockIter = _blockIterator.copy();
-		beforeTXIter = _tranactionIterator != null ? _tranactionIterator.copy() : null;
 		while(_blockIterator.hasNext())
 		{
-			ArrayList<Transaction> blockTXs = _blockIterator.next().transactions();
-			_tranactionIterator = new TwoWayListIterator<>( blockTXs, 0 );
-			
-			while(_tranactionIterator.hasNext())
+			ArrayList<Transaction> blockTXs = _blockIterator.next().transactions(_productID);
+			if(blockTXs.size() == 0)
 			{
-				Transaction tx = _tranactionIterator.next();
-				
-				if(_productID == null || tx.productID().equals(_productID))
-				{
-					return tx;
-				}
+				continue;
+			}
+
+			_transactionIterator = new TwoWayListIterator<>( blockTXs, 0 );
+			
+			if(_transactionIterator.hasNext())
+			{
+				return _transactionIterator.next();
 			}
 		}
-		_tranactionIterator = beforeTXIter;
 		_blockIterator = beforeBlockIter;
 		
 		return null;

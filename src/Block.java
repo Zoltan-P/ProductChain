@@ -9,19 +9,20 @@ import java.util.Date;
 
 public class Block {
 	private String _previousHash; 
-	private ArrayList<Transaction> _transactions;
+	private TransactionHistory _transactions;
 	private long _timestamp;
 	private int _nonce; 
 	
-	public Block(String previousHash, ArrayList<Transaction> transactions)
+	public Block(String previousHash, TransactionHistory transactions)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException
 	{
 		_previousHash = previousHash;
-		_transactions = new ArrayList<Transaction>(transactions);
+		_transactions = new TransactionHistory(transactions);
 		_timestamp = new Date().getTime();
 		_nonce = 0;
 	}
-	
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -64,7 +65,7 @@ public class Block {
 		throws NoSuchAlgorithmException, UnsupportedEncodingException 
 	{
 		StringBuilder txStr = new StringBuilder();
-		for(Transaction tx : _transactions)
+		for(Transaction tx : _transactions.allTransactions())
 		{
 			txStr.append(tx.toString());
 		}
@@ -78,15 +79,22 @@ public class Block {
 		return hash;
 	}
 	
-	public ArrayList<Transaction> transactions()
+	public TransactionHistory transactions()
 	{
-		return new ArrayList<Transaction>( _transactions );
+		return new TransactionHistory( _transactions );
+	}
+	
+	public ArrayList<Transaction> transactions(String productID)
+	{
+		return _transactions.transactions(productID);
 	}
 
-	public boolean verify(Block previousBlock, Transaction previousTransaction)
+	public boolean verify(ArrayList<Block> blockchain)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException, SignatureException, InvalidKeySpecException, 
 					InvalidKeyException, NoSuchProviderException
 	{
+		Block previousBlock = Utils.getLast(blockchain);
+		
 		if(previousBlock == null && _previousHash.length() != 0)
 		{
 			return false;
@@ -96,18 +104,24 @@ public class Block {
 		{
 			return false;
 		}
-		
-		Transaction lastTX = previousTransaction;
-		for(Transaction tx : _transactions)
+
+		for(String productID : _transactions.productsInvolved())
 		{
-			if(!tx.verifySignature(lastTX))
-			{
-				return false;
-			}
+			ArrayList<Transaction> blockTXs = _transactions.transactions(productID);
 			
-			lastTX = tx;
+			Transaction lastTX = new ProductChangeIterator(productID, blockchain).retreat();
+			
+			for(Transaction tx : blockTXs)
+			{
+				if(!tx.verifySignature(lastTX))
+				{
+					return false;
+				}
+				
+				lastTX = tx;
+			}
 		}
-		
+
 		return true;
 	}
 }

@@ -10,6 +10,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.security.spec.ECGenParameterSpec;
+import java.util.ArrayList;
 
 public class Product {
 	private PrivateKey _productKey;
@@ -34,9 +35,11 @@ public class Product {
 		return _productID;
 	}
 
-	public Transaction generateTransaction(Transaction previousTransaction, String description)
+	public Transaction generateTransaction(TransactionHistory _transactionPool, ArrayList<Block> _blockchain, String description)
 			throws NoSuchProviderException, NoSuchAlgorithmException, SignatureException, InvalidKeyException, UnsupportedEncodingException
 	{
+		String productID = Utils.stringFromKey( _productID );
+		Transaction previousTransaction = Utils.findLastTransaction(productID, _transactionPool, _blockchain);
 		return new Transaction(previousTransaction, _productKey, _productID, description);
 	}
 }

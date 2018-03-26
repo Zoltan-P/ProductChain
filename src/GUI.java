@@ -63,17 +63,17 @@ public class GUI extends JFrame {
 	 */
 	public static void main(String[] args) {
 		Node host = new Node();
-		 //Node host2 = new Node();
-		 //Node host3 = new Node();
+		 Node host2 = new Node();
+		 Node host3 = new Node();
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					GUI frame = new GUI(host, "Product Chain - Node");
 					frame.setVisible(true);
-					 //GUI frame2 = new GUI(host2, "Product Chain - Node 2");
-					 //frame2.setVisible(true);
-					 //GUI frame3 = new GUI(host3, "Product Chain - Node 3");
-					 //frame3.setVisible(true);
+					 GUI frame2 = new GUI(host2, "Product Chain - Node 2");
+					 frame2.setVisible(true);
+					 GUI frame3 = new GUI(host3, "Product Chain - Node 3");
+					 frame3.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
