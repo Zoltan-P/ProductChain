@@ -1,3 +1,9 @@
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
@@ -120,5 +126,29 @@ public class TransactionHistory {
 	public Set<String> productsInvolved()
 	{
 		return _transactions.keySet();
+	}
+	
+	public boolean verify(ArrayList<Block> blockchain)
+			throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, 
+					UnsupportedEncodingException, InvalidKeySpecException
+	{
+		for(String productID : productsInvolved())
+		{
+			ArrayList<Transaction> blockTXs = transactions(productID);
+			
+			Transaction lastTX = new ProductChangeIterator(productID, blockchain, blockchain.size()).retreat();
+			
+			for(Transaction tx : blockTXs)
+			{
+				if(!tx.verifySignature(lastTX))
+				{
+					return false;
+				}
+				
+				lastTX = tx;
+			}
+		}
+
+		return true;
 	}
 }

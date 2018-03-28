@@ -51,12 +51,21 @@ public class Peer extends Thread {
 				if(message.type == Message.Type.TX)
 				{
 					Transaction tx = (Transaction)message.content;
-					_host.addIncomingTransaction(tx);
+					_host.addIncomingTransaction(this, tx);
 				}
 				else if(message.type == Message.Type.BLOCK)
 				{
 					Block block = (Block)message.content;
-					_host.addIncomingBlock(block);
+					_host.addIncomingBlock(this, block);
+				}
+				else if(message.type == Message.Type.FULL_BLOCKCHAIN)
+				{
+					FullBlockchain fullBlockchain = (FullBlockchain)message.content;
+					_host.addIncomingFullBlockchain(this, fullBlockchain);
+				}
+				else if(message.type == Message.Type.REQUEST_ALL)
+				{
+					_host.replyToRequestAll(this);
 				}
 			}
 		}
@@ -105,6 +114,22 @@ public class Peer extends Thread {
 		writer.write( Utils.getJson(new Message(Message.Type.BLOCK, block)) );
 		writer.newLine();
 		writer.flush();
+	}
+
+	public void send(FullBlockchain fullBlockchain) throws IOException
+	{
+		BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(output()) );
+		writer.write( Utils.getJson(new Message(Message.Type.FULL_BLOCKCHAIN, fullBlockchain)) );
+		writer.newLine();
+		writer.flush();
+	}
+	
+	public void requestAll() throws IOException
+	{
+		BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(output()) );
+		writer.write( Utils.getJson(new Message(Message.Type.REQUEST_ALL, null)) );
+		writer.newLine();
+		writer.flush();		
 	}
 
 	@Override

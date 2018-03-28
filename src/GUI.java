@@ -65,6 +65,7 @@ public class GUI extends JFrame {
 		Node host = new Node();
 		 Node host2 = new Node();
 		 Node host3 = new Node();
+		 Node host4 = new Node();
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -74,6 +75,8 @@ public class GUI extends JFrame {
 					 frame2.setVisible(true);
 					 GUI frame3 = new GUI(host3, "Product Chain - Node 3");
 					 frame3.setVisible(true);
+					 GUI frame4 = new GUI(host4, "Product Chain - Node 4");
+					 frame4.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

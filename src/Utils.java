@@ -18,7 +18,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 
 public class Utils {
 	
@@ -29,21 +28,27 @@ public class Utils {
             throw new IllegalArgumentException( objectName + " may NOT be 'null'");
     }
 
+	public static <T> void RANGE_CHECK(String objectName, Comparable<T> object, T min, T max)
+	{
+		if ( object.compareTo(min) < 0 || object.compareTo(max) > 0 )
+            throw new IllegalArgumentException( objectName + " out of range");
+    }
+
 
 //*********** Json conversion
-	public static String getJson(Object o) {
+	public static String getJson(Object o) 
+	{
 		return new GsonBuilder().create().toJson(o);
 	}
 
-	public static ArrayList<Block> getBlocks(String json) {
-		return new Gson().fromJson( json, new TypeToken<ArrayList<Block>>(){}.getType() );
-	}
-
-	public static Message getMessage(String json) {
+	public static Message getMessage(String json) 
+	{
 		JsonObject job = new JsonParser().parse(json).getAsJsonObject();
 		Gson gson = new Gson();
+		
 		Message.Type type = gson.fromJson( job.get("type"), Message.Type.class );
 		Object content = null;
+		
 		if(type == Message.Type.TX)
 		{
 			content = gson.fromJson(job.get("content"), Transaction.class);
@@ -51,6 +56,10 @@ public class Utils {
 		else if(type == Message.Type.BLOCK)
 		{
 			content = gson.fromJson(job.get("content"), Block.class);
+		}
+		else if(type == Message.Type.FULL_BLOCKCHAIN)
+		{
+			content = gson.fromJson(job.get("content"), FullBlockchain.class);
 		}
 		
 		return new Message(type, content);
@@ -62,7 +71,8 @@ public class Utils {
 	{
 		String result = "";
 
-		for (int i = 0; i < rawData.length; ++i) {
+		for (int i = 0; i < rawData.length; ++i) 
+		{
 			result += String.format("%02x", rawData[i]);
 		}
 		
@@ -73,7 +83,8 @@ public class Utils {
 	{
 		int strlen = hexString.length();
 		byte[] rawData = new byte[strlen / 2];
-	    for (int i = 0; i < strlen; i += 2) {
+	    for (int i = 0; i < strlen; i += 2) 
+	    {
 	        rawData[i / 2] = (byte) (( Character.digit(hexString.charAt(i), 16) << 4)
 	        						+ Character.digit(hexString.charAt(i+1), 16));
 	    }
@@ -140,7 +151,7 @@ public class Utils {
 			return tx;
 		}
 
-		return new ProductChangeIterator(productID, blockchain).retreat();
+		return new ProductChangeIterator(productID, blockchain, blockchain.size()).retreat();
 	}
 	
 	public static <T> T getLast(ArrayList<T> list)
@@ -152,9 +163,12 @@ public class Utils {
 
 
 //*********** Communications
-	public static <T> void broadcast(T message, ArrayList<Peer> peers) throws IOException
+	public static <T> void broadcast(T message, ArrayList<Peer> peers, Peer origin) throws IOException
 	{
-		for(Peer p : peers)
+		ArrayList<Peer> targets = new ArrayList<Peer>(peers);
+		targets.remove(origin);
+		
+		for(Peer p : targets)
 		{
 			if(message instanceof Transaction)
 			{
@@ -165,6 +179,11 @@ public class Utils {
 			{
 				Block block = (Block)message;
 				p.send(block);
+			}
+			else if(message instanceof FullBlockchain)
+			{
+				FullBlockchain fullBlockchain = (FullBlockchain)message;
+				p.send(fullBlockchain);
 			}
 		}
 	}

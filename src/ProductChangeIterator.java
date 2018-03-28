@@ -5,13 +5,14 @@ public class ProductChangeIterator {
 	private TwoWayListIterator<Block> _blockIterator;
 	private TwoWayListIterator<Transaction> _transactionIterator;
 	
-	public ProductChangeIterator(String productID, ArrayList<Block> blockchain)
+	public ProductChangeIterator(String productID, ArrayList<Block> blockchain, int position)
 	{
 		Utils.NULL_CHECK("ProductID", productID);
 		Utils.NULL_CHECK("Blockchain", blockchain);
+		Utils.RANGE_CHECK("Position", position, 0, blockchain.size());
 		
 		_productID = productID;
-		_blockIterator = new TwoWayListIterator<>( blockchain, blockchain.size() );
+		_blockIterator = new TwoWayListIterator<>( blockchain, position );
 		_transactionIterator = null;
 	}
 	

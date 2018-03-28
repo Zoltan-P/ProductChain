@@ -120,12 +120,7 @@ public class Node {
 	public void addPeer(Socket socket) throws IOException
 	{
 		Utils.NULL_CHECK("Socket", socket);
-		/*
-		System.out.println("Remote Address=" + socket.getInetAddress().getHostAddress());
-		System.out.println("Remote Port=" + socket.getPort());
-		System.out.println("Local Address=" + socket.getLocalAddress());
-		System.out.println("Local Port=" + socket.getLocalPort());
-		*/
+
 		synchronized(_peers)
 		{
 			_peers.add( new Peer(this, socket) );
@@ -212,7 +207,7 @@ public class Node {
 				}
 			}
 			
-			Utils.broadcast(tx, _peers);
+			Utils.broadcast(tx, _peers, null);
 			
 			System.out.println("Transaction was created, added to the transaction pool and broadcasted to the network.");
 			_statusBar.setText("Transaction created and added to the transaction pool.");
@@ -244,7 +239,7 @@ public class Node {
 				_transactionPool.Clear();
 			}
 			
-			Utils.broadcast(block, _peers);
+			Utils.broadcast(block, _peers, null);
 			
 			System.out.println("A new block was mined for the pooled transactions. Transaction pool emptied. Block added to the blockchain and broadcasted to the network.");
 			_statusBar.setText("Block mined and added to the blockchain. Transaction pool emptied.");
@@ -264,7 +259,7 @@ public class Node {
 			Transaction tx;
 			synchronized (_blockchain) 
 			{
-				_productChangeIter = new ProductChangeIterator(productID, _blockchain);
+				_productChangeIter = new ProductChangeIterator(productID, _blockchain, _blockchain.size());
 				tx = _productChangeIter.retreat();
 			}
 			
@@ -308,7 +303,7 @@ public class Node {
 		}
 	}
 	
-	public void addIncomingTransaction(Transaction transaction)
+	public void addIncomingTransaction(Peer sender, Transaction transaction)
 	{
 		try
 		{
@@ -330,8 +325,6 @@ public class Node {
 				}
 				else if(!_transactionPool.Contains(transaction))
 				{
-					broadcast = true;
-					
 					System.out.println("Incoming transaction verification failed. Transaction refused.");
 					_statusBar.setText("Incoming transaction verification failed. Transaction refused.");
 				}
@@ -339,7 +332,7 @@ public class Node {
 			
 			if(broadcast)
 			{
-				Utils.broadcast(transaction, _peers);
+				Utils.broadcast(transaction, _peers, sender);
 			}
 		}
 		catch(Exception e)
@@ -348,19 +341,20 @@ public class Node {
 		}
 	}
 	
-	public void addIncomingBlock(Block block)
+	public void addIncomingBlock(Peer sender, Block block)
 	{
 		try
 		{
 			Utils.NULL_CHECK("Block", block);
 			
 			boolean broadcast = false;
+			boolean requestAll = false;
 			
 			synchronized (_transactionPool) 
 			{
 				synchronized (_blockchain) 
 				{
-					if( block.verify(_blockchain) )
+					if( block.verifyAt(_blockchain, _blockchain.size()) )
 					{
 						_blockchain.add(block);
 						_transactionPool.RemoveAll(block.transactions());
@@ -372,7 +366,7 @@ public class Node {
 					}
 					else if(!_blockchain.contains(block))
 					{
-						broadcast = true;
+						requestAll = true;
 						
 						System.out.println("Incoming block verification failed. Block refused.");
 						_statusBar.setText("Incoming block verification failed. Block refused.");
@@ -382,10 +376,73 @@ public class Node {
 			
 			if(broadcast)
 			{
-				Utils.broadcast(block, _peers);
+				Utils.broadcast(block, _peers, sender);
+			}
+			
+			if(requestAll)
+			{
+				sender.requestAll();
+				
+				System.out.println("Requesting blockchain from sender of the refused block.");
+				_statusBar.setText("Requesting blockchain from sender of the refused block.");
 			}
 		}
 		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+		}
+	}
+
+	public void addIncomingFullBlockchain(Peer sender, FullBlockchain fullBlockchain)
+	{
+		try
+		{
+			boolean broadcast = false;
+			
+			synchronized (_transactionPool) 
+			{
+				synchronized (_blockchain) 
+				{
+					if(fullBlockchain.blockchain().size() > _blockchain.size() && fullBlockchain.verify())
+					{
+						_blockchain = fullBlockchain.blockchain();
+						_transactionPool = fullBlockchain.transactionPool();
+						broadcast = true;
+						
+						System.out.println("Received blockchain is longer and verified. Switching to the new blockchain.");
+						_statusBar.setText("Received blockchain is longer and verified. Switching to the new blockchain.");
+					}
+				}
+			}
+			
+			if(broadcast)
+			{
+				Utils.broadcast(fullBlockchain, _peers, sender);
+			}
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+		}
+		
+	}
+	
+	public void replyToRequestAll(Peer sender)
+	{
+		try
+		{
+			synchronized (_transactionPool) 
+			{
+				synchronized (_blockchain) 
+				{
+					sender.send(new FullBlockchain(_blockchain, _transactionPool));
+		
+					System.out.println("Sending the whole blockchain to interested node.");
+					_statusBar.setText("Sending the whole blockchain to interested node.");
+				}
+			}
+		}
+		catch(IOException e)
 		{
 			System.out.println(e.getMessage());
 		}

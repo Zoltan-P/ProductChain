@@ -2,9 +2,11 @@
 public class Message {
 	public enum Type {
 		TX,
-		BLOCK
+		BLOCK,
+		FULL_BLOCKCHAIN,
+		REQUEST_ALL
 	}
-	
+
 	public Type 	type;
 	public Object 	content;
 	

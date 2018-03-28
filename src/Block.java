@@ -89,11 +89,12 @@ public class Block {
 		return _transactions.transactions(productID);
 	}
 
-	public boolean verify(ArrayList<Block> blockchain)
+	public boolean verifyAt(ArrayList<Block> blockchain, int position)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException, SignatureException, InvalidKeySpecException, 
 					InvalidKeyException, NoSuchProviderException
 	{
-		Block previousBlock = Utils.getLast(blockchain);
+		Utils.RANGE_CHECK("Position", position, 0, blockchain.size());
+		Block previousBlock = position > 0 ? blockchain.get(position-1) : null;
 		
 		if(previousBlock == null && _previousHash.length() != 0)
 		{
@@ -109,7 +110,7 @@ public class Block {
 		{
 			ArrayList<Transaction> blockTXs = _transactions.transactions(productID);
 			
-			Transaction lastTX = new ProductChangeIterator(productID, blockchain).retreat();
+			Transaction lastTX = new ProductChangeIterator(productID, blockchain, position).retreat();
 			
 			for(Transaction tx : blockTXs)
 			{

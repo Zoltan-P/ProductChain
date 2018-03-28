@@ -97,7 +97,6 @@ public class Transaction {
 	public boolean verifySignature(Transaction previousTransaction)
 			throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, 
 					UnsupportedEncodingException, InvalidKeySpecException
-					
 	{
 		String txHash = calculateHash(previousTransaction);
 		PublicKey productID = (PublicKey)Utils.keyFromString(_productID);
