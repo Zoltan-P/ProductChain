@@ -19,7 +19,7 @@ public class Transaction {
 		Utils.NULL_CHECK("ProductID", productID);
 		Utils.NULL_CHECK("Description", description);
 
-		_productID = Utils.stringFromKey( productID );
+		_productID = Utils.StringFromKey( productID );
 		_description = description;
 		_signature = generateSignature(previousTransaction, productKey);
 	}
@@ -81,7 +81,7 @@ public class Transaction {
 		String hashInput = _productID + _description 
 				+ (previousTransaction != null ?  previousTransaction.toString() : "");
 
-		return Utils.sha256	( hashInput	);
+		return Utils.Sha256	( hashInput	);
 	} 
 
 	private byte[] generateSignature(Transaction previousTransaction, PrivateKey productKey) 
@@ -91,7 +91,7 @@ public class Transaction {
 		
 		String txHash = calculateHash(previousTransaction);
 
-		return Utils.signature(productKey, txHash);
+		return Utils.Signature(productKey, txHash);
 	}
 	
 	public boolean verifySignature(Transaction previousTransaction)
@@ -99,9 +99,9 @@ public class Transaction {
 					UnsupportedEncodingException, InvalidKeySpecException
 	{
 		String txHash = calculateHash(previousTransaction);
-		PublicKey productID = (PublicKey)Utils.keyFromString(_productID);
+		PublicKey productID = (PublicKey)Utils.KeyFromString(_productID);
 		
-		return Utils.verifySignature(productID, txHash, _signature);
+		return Utils.VerifySignature(productID, txHash, _signature);
 	} 
 		
 }

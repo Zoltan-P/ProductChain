@@ -38,8 +38,8 @@ public class Product {
 	public Transaction generateTransaction(TransactionHistory _transactionPool, ArrayList<Block> _blockchain, String description)
 			throws NoSuchProviderException, NoSuchAlgorithmException, SignatureException, InvalidKeyException, UnsupportedEncodingException
 	{
-		String productID = Utils.stringFromKey( _productID );
-		Transaction previousTransaction = Utils.findLastTransaction(productID, _transactionPool, _blockchain);
+		String productID = Utils.StringFromKey( _productID );
+		Transaction previousTransaction = Utils.FindLastTransaction(productID, _transactionPool, _blockchain);
 		return new Transaction(previousTransaction, _productKey, _productID, description);
 	}
 }

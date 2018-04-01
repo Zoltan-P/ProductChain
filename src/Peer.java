@@ -46,7 +46,7 @@ public class Peer extends Thread {
 			String line = null;
 			while( (line = reader.readLine()) != null ) 
 			{
-				Message message = Utils.getMessage(line);
+				Message message = Utils.GetMessage(line);
 				
 				if(message.type == Message.Type.TX)
 				{
@@ -56,7 +56,7 @@ public class Peer extends Thread {
 				else if(message.type == Message.Type.BLOCK)
 				{
 					Block block = (Block)message.content;
-					_host.addIncomingBlock(this, block);
+					_host.addNewBlock(this, block);
 				}
 				else if(message.type == Message.Type.FULL_BLOCKCHAIN)
 				{
@@ -103,7 +103,7 @@ public class Peer extends Thread {
 	public void send(Transaction transaction) throws IOException
 	{
 		BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(output()) );
-		writer.write( Utils.getJson(new Message(Message.Type.TX, transaction)) ); 
+		writer.write( Utils.GetJson(new Message(Message.Type.TX, transaction)) ); 
 		writer.newLine();
 		writer.flush();
 	}
@@ -111,7 +111,7 @@ public class Peer extends Thread {
 	public void send(Block block) throws IOException
 	{
 		BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(output()) );
-		writer.write( Utils.getJson(new Message(Message.Type.BLOCK, block)) );
+		writer.write( Utils.GetJson(new Message(Message.Type.BLOCK, block)) );
 		writer.newLine();
 		writer.flush();
 	}
@@ -119,7 +119,7 @@ public class Peer extends Thread {
 	public void send(FullBlockchain fullBlockchain) throws IOException
 	{
 		BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(output()) );
-		writer.write( Utils.getJson(new Message(Message.Type.FULL_BLOCKCHAIN, fullBlockchain)) );
+		writer.write( Utils.GetJson(new Message(Message.Type.FULL_BLOCKCHAIN, fullBlockchain)) );
 		writer.newLine();
 		writer.flush();
 	}
@@ -127,7 +127,7 @@ public class Peer extends Thread {
 	public void requestAll() throws IOException
 	{
 		BufferedWriter writer = new BufferedWriter( new OutputStreamWriter(output()) );
-		writer.write( Utils.getJson(new Message(Message.Type.REQUEST_ALL, null)) );
+		writer.write( Utils.GetJson(new Message(Message.Type.REQUEST_ALL, null)) );
 		writer.newLine();
 		writer.flush();		
 	}

@@ -63,20 +63,20 @@ public class GUI extends JFrame {
 	 */
 	public static void main(String[] args) {
 		Node host = new Node();
-		 Node host2 = new Node();
-		 Node host3 = new Node();
-		 Node host4 = new Node();
+		 //Node host2 = new Node();
+		 //Node host3 = new Node();
+		 //Node host4 = new Node();
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					GUI frame = new GUI(host, "Product Chain - Node");
 					frame.setVisible(true);
-					 GUI frame2 = new GUI(host2, "Product Chain - Node 2");
-					 frame2.setVisible(true);
-					 GUI frame3 = new GUI(host3, "Product Chain - Node 3");
-					 frame3.setVisible(true);
-					 GUI frame4 = new GUI(host4, "Product Chain - Node 4");
-					 frame4.setVisible(true);
+					 //GUI frame2 = new GUI(host2, "Product Chain - Node 2");
+					 //frame2.setVisible(true);
+					 //GUI frame3 = new GUI(host3, "Product Chain - Node 3");
+					 //frame3.setVisible(true);
+					 //GUI frame4 = new GUI(host4, "Product Chain - Node 4");
+					 //frame4.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -266,15 +266,15 @@ public class GUI extends JFrame {
 		btnAddPeer.setBounds(231, 78, 49, 23);
 		contentPane.add(btnAddPeer);
 		
-		JButton btnStart = new JButton("Start");
-		btnStart.addActionListener(new ActionListener() {
+		JButton btnListen = new JButton("Listen");
+		btnListen.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				_host.startListening( (int)spinHostPort.getValue() );
-				btnStart.setEnabled(false);
+				btnListen.setEnabled(false);
 			}
 		});
-		btnStart.setBounds(218, 11, 78, 39);
-		contentPane.add(btnStart);
+		btnListen.setBounds(218, 11, 78, 39);
+		contentPane.add(btnListen);
 		
 		JButton btnPrintBlockchainData = new JButton("Print Blockchain Data");
 		btnPrintBlockchainData.addActionListener(new ActionListener() {
@@ -293,6 +293,15 @@ public class GUI extends JFrame {
 		});
 		btnPrintTransactionPoolData.setBounds(306, 338, 196, 23);
 		contentPane.add(btnPrintTransactionPoolData);
+		
+		JButton btnStartMining = new JButton("Start Mining");
+		btnStartMining.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				_host.startMining();
+			}
+		});
+		btnStartMining.setBounds(306, 304, 196, 23);
+		contentPane.add(btnStartMining);
 		
 	}
 }

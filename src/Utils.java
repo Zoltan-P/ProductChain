@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -36,12 +37,12 @@ public class Utils {
 
 
 //*********** Json conversion
-	public static String getJson(Object o) 
+	public static String GetJson(Object o) 
 	{
 		return new GsonBuilder().create().toJson(o);
 	}
 
-	public static Message getMessage(String json) 
+	public static Message GetMessage(String json) 
 	{
 		JsonObject job = new JsonParser().parse(json).getAsJsonObject();
 		Gson gson = new Gson();
@@ -67,7 +68,7 @@ public class Utils {
 
 	
 //*********** Data conversion
-	public static String toHexString(byte[] rawData)
+	public static String ToHexString(byte[] rawData)
 	{
 		String result = "";
 
@@ -79,7 +80,7 @@ public class Utils {
 		return result;
 	}
 	
-	public static byte[] toRawData(String hexString)
+	public static byte[] ToRawData(String hexString)
 	{
 		int strlen = hexString.length();
 		byte[] rawData = new byte[strlen / 2];
@@ -92,31 +93,36 @@ public class Utils {
 	    return rawData;
 	}
 	
-	public static String stringFromKey(Key key) 
+	public static String StringFromKey(Key key) 
 	{
-		return toHexString(key.getEncoded());
+		return ToHexString(key.getEncoded());
 	}
 	
-	public static Key keyFromString(String keyStr) 
+	public static Key KeyFromString(String keyStr) 
 			throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeySpecException
 	{
 	    KeyFactory factory = KeyFactory.getInstance("ECDSA", "BC");
-	    return factory.generatePublic(new X509EncodedKeySpec( toRawData(keyStr) ));
+	    return factory.generatePublic(new X509EncodedKeySpec( ToRawData(keyStr) ));
 	}
 	
+	public static String HexToBinary(String hex)
+	{
+		int width = hex.length() * 4;
+	    return String.format("%"+width+"s", new BigInteger(hex, 16).toString(2)).replace(' ', '0');
+	}
 	
 //*********** Cryptography	
-	public static String sha256(String input)
+	public static String Sha256(String input)
 			throws NoSuchAlgorithmException, UnsupportedEncodingException
 	{
 		NULL_CHECK("SHA256 Input", input);
 		
 		MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-		return toHexString( digest.digest(input.getBytes("UTF-8")) );
+		return ToHexString( digest.digest(input.getBytes("UTF-8")) );
 	} 
 	
-	public static byte[] signature(PrivateKey privateKey, String input) 
+	public static byte[] Signature(PrivateKey privateKey, String input) 
 			throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException
 	{
 		NULL_CHECK("PrivateKey", privateKey);
@@ -128,7 +134,7 @@ public class Utils {
 		return dsa.sign();
 	}
 	
-	public static boolean verifySignature(PublicKey publicKey, String data, byte[] signature) 
+	public static boolean VerifySignature(PublicKey publicKey, String data, byte[] signature) 
 			throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, SignatureException
 	{
 		Signature dsa = Signature.getInstance("ECDSA", "BC");
@@ -138,14 +144,14 @@ public class Utils {
 	}
 	
 	
-//*********** Blockchain navigation
-	public static Transaction findLastTransaction(String productID, TransactionHistory transactionPool, ArrayList<Block> blockchain)
+//*********** Blockchain
+	public static Transaction FindLastTransaction(String productID, TransactionHistory transactionPool, ArrayList<Block> blockchain)
 	{
 		NULL_CHECK("ProductID", productID);
 		NULL_CHECK("TransactionPool", transactionPool);
 		NULL_CHECK("Blockchain", blockchain);
 		
-		Transaction tx = getLast( transactionPool.transactions(productID) );
+		Transaction tx = GetLast( transactionPool.transactions(productID) );
 		if(tx != null)
 		{
 			return tx;
@@ -154,23 +160,35 @@ public class Utils {
 		return new ProductChangeIterator(productID, blockchain, blockchain.size()).retreat();
 	}
 	
-	public static <T> T getLast(ArrayList<T> list)
+	public static <T> T GetLast(ArrayList<T> list)
 	{
 		NULL_CHECK("List", list);
 		
 		return list.size() != 0 ? list.get(list.size()-1) : null;
 	}
 
+	public static boolean HashTargetReached(Block block)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException
+	{
+		String binaryHashPrefix = new String(new char[Node.LogarithmicDifficulty()]).replace('\0', '0');
+		String hash = block.calculateHash();
+		
+		return Utils.HexToBinary(hash).substring(0, Node.LogarithmicDifficulty()).equals(binaryHashPrefix);
+	}
 
 //*********** Communications
-	public static <T> void broadcast(T message, ArrayList<Peer> peers, Peer origin) throws IOException
+	public static <T> void Broadcast(T message, ArrayList<Peer> peers, Peer origin) throws IOException
 	{
 		ArrayList<Peer> targets = new ArrayList<Peer>(peers);
 		targets.remove(origin);
 		
 		for(Peer p : targets)
 		{
-			if(message instanceof Transaction)
+			if(message == null)
+			{
+				p.requestAll();
+			}
+			else if(message instanceof Transaction)
 			{
 				Transaction tx = (Transaction)message;
 				p.send(tx);

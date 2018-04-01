@@ -21,8 +21,11 @@ public class TransactionHistory {
 	public TransactionHistory(TransactionHistory transactions)
 	{
 		this();
-		
-		_transactions.putAll(transactions._transactions);
+
+		for(Map.Entry<String,ArrayList<Transaction>> entry : transactions._transactions.entrySet()) 
+		{
+			_transactions.put(entry.getKey(), new ArrayList<Transaction>(entry.getValue()));
+		}
 	}
 	
 	@Override

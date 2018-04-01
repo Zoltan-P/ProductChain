@@ -11,18 +11,18 @@ public class Block {
 	private String _previousHash; 
 	private TransactionHistory _transactions;
 	private long _timestamp;
-	private int _nonce; 
+	private int _nonce;
+	private static int _Counter = 0;
 	
 	public Block(String previousHash, TransactionHistory transactions)
-			throws NoSuchAlgorithmException, UnsupportedEncodingException
 	{
 		_previousHash = previousHash;
 		_transactions = new TransactionHistory(transactions);
 		_timestamp = new Date().getTime();
-		_nonce = 0;
+		_nonce = _Counter++;
 	}
 
-
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -70,7 +70,7 @@ public class Block {
 			txStr.append(tx.toString());
 		}
 		
-		String hash = Utils.sha256( _previousHash 
+		String hash = Utils.Sha256( _previousHash 
 								  + txStr.toString()
 							      + Long.toString(_timestamp) 
 							      + Integer.toString(_nonce) 
