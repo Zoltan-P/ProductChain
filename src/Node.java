@@ -88,12 +88,18 @@ public class Node {
 	
 	public int peerCount()
 	{
-		return _peers.size();
+		synchronized (_peers) 
+		{
+			return _peers.size();	
+		}
 	}
 	
 	public String peerName(int index)
 	{
-		return _peers.get(index).id();
+		synchronized (_peers) 
+		{
+			return _peers.get(index).id();	
+		}
 	}
 		
 	public void addPeer(String address, Integer port)
@@ -135,6 +141,14 @@ public class Node {
 		displayOnStatusBar("Connection established.");
 	}
 	
+	public void removePeer(Peer peer)
+	{
+		synchronized(_peers)
+		{
+			_peers.remove(peer);
+		}
+	}
+	
 	public void setPeerTable(GUI.TableModel peerTableModel)
 	{
 		_peerTableModel = peerTableModel;
@@ -166,9 +180,12 @@ public class Node {
 				_transactionPool.Add(genesisTX);
 			}
 
-			for(Peer p : _peers)
+			synchronized(_peers)
 			{
-				p.send( genesisTX );
+				for(Peer p : _peers)
+				{
+					p.send( genesisTX );
+				}
 			}
 			
 			System.out.println("New product was created. Initial transaction was added to the transaction pool and broadcast to the network.");
@@ -244,9 +261,7 @@ public class Node {
 			
 			Utils.Broadcast(block, _peers, null);
 			
-			_miner.interrupt();
-			_miner = new Miner(this);
-			_miner.start();
+			restartMining();
 			
 			System.out.println("A new block was mined for the pooled transactions. Transaction pool emptied. Block added to the blockchain and broadcast to the network.");
 			displayOnStatusBar("Block mined and added to the blockchain. Transaction pool emptied.");
@@ -412,9 +427,7 @@ public class Node {
 			{
 				Utils.Broadcast(block, _peers, sender);
 
-				_miner.interrupt();
-				_miner = new Miner(this);
-				_miner.start();
+				restartMining();
 			}
 			
 			if(requestAll && sender != null)
@@ -456,10 +469,8 @@ public class Node {
 			if(accepted)
 			{
 				Utils.Broadcast(fullBlockchain, _peers, sender);
-				
-				_miner.interrupt();
-				_miner = new Miner(this);
-				_miner.start();
+
+				restartMining();
 			}
 		}
 		catch(Exception e)
@@ -518,14 +529,26 @@ public class Node {
 	{
 		try
 		{
+			if(_miner.isAlive()) return;
+			
 			_miner.start();
 			
 			// Broadcast RequestAll
 			Utils.Broadcast(null, _peers, null);
 		}
-		catch(IOException e)
+		catch(Exception e)
 		{
 			System.out.println(e.getMessage());
+		}
+	}
+	
+	private synchronized void restartMining()
+	{
+		if(_miner.isAlive())
+		{
+			_miner.interrupt();
+			_miner = new Miner(this);
+			_miner.start();
 		}
 	}
 	

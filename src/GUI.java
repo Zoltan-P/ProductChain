@@ -298,6 +298,7 @@ public class GUI extends JFrame {
 		btnStartMining.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				_host.startMining();
+				btnStartMining.setEnabled(false);
 			}
 		});
 		btnStartMining.setBounds(306, 304, 196, 23);

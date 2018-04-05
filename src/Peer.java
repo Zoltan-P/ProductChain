@@ -72,6 +72,7 @@ public class Peer extends Thread {
 		catch(IOException e)
 		{
 			System.out.println(e.getMessage());
+			_host.removePeer(this);
 		}
 	}
 	

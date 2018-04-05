@@ -179,29 +179,32 @@ public class Utils {
 //*********** Communications
 	public static <T> void Broadcast(T message, ArrayList<Peer> peers, Peer origin) throws IOException
 	{
-		ArrayList<Peer> targets = new ArrayList<Peer>(peers);
-		targets.remove(origin);
-		
-		for(Peer p : targets)
+		synchronized(peers)
 		{
-			if(message == null)
+			ArrayList<Peer> targets = new ArrayList<Peer>(peers);
+			targets.remove(origin);
+			
+			for(Peer p : targets)
 			{
-				p.requestAll();
-			}
-			else if(message instanceof Transaction)
-			{
-				Transaction tx = (Transaction)message;
-				p.send(tx);
-			}
-			else if(message instanceof Block)
-			{
-				Block block = (Block)message;
-				p.send(block);
-			}
-			else if(message instanceof FullBlockchain)
-			{
-				FullBlockchain fullBlockchain = (FullBlockchain)message;
-				p.send(fullBlockchain);
+				if(message == null)
+				{
+					p.requestAll();
+				}
+				else if(message instanceof Transaction)
+				{
+					Transaction tx = (Transaction)message;
+					p.send(tx);
+				}
+				else if(message instanceof Block)
+				{
+					Block block = (Block)message;
+					p.send(block);
+				}
+				else if(message instanceof FullBlockchain)
+				{
+					FullBlockchain fullBlockchain = (FullBlockchain)message;
+					p.send(fullBlockchain);
+				}
 			}
 		}
 	}
