@@ -147,6 +147,8 @@ public class Node {
 		{
 			_peers.remove(peer);
 		}
+		
+		_peerTableModel.fireTableDataChanged();
 	}
 	
 	public void setPeerTable(GUI.TableModel peerTableModel)
@@ -180,13 +182,7 @@ public class Node {
 				_transactionPool.Add(genesisTX);
 			}
 
-			synchronized(_peers)
-			{
-				for(Peer p : _peers)
-				{
-					p.send( genesisTX );
-				}
-			}
+			Utils.Broadcast(genesisTX, _peers, null);
 			
 			System.out.println("New product was created. Initial transaction was added to the transaction pool and broadcast to the network.");
 			displayOnStatusBar("New product was created. Initial transaction added to the transaction pool.");
