@@ -56,12 +56,21 @@ public class Peer extends Thread {
 				else if(message.type == Message.Type.BLOCK)
 				{
 					Block block = (Block)message.content;
-					_host.addNewBlock(this, block);
+					if( _host.addNewBlock(this, block))
+					{
+						_host.pushToGDS(block.transactions().allTransactions());
+					}
 				}
 				else if(message.type == Message.Type.FULL_BLOCKCHAIN)
 				{
 					FullBlockchain fullBlockchain = (FullBlockchain)message.content;
-					_host.addIncomingFullBlockchain(this, fullBlockchain);
+					if( _host.addIncomingFullBlockchain(this, fullBlockchain) )
+					{
+						for(Block block : fullBlockchain.blockchain())
+						{
+							_host.pushToGDS(block.transactions().allTransactions());
+						}
+					}
 				}
 				else if(message.type == Message.Type.REQUEST_ALL)
 				{

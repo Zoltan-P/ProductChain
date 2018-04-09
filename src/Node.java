@@ -4,6 +4,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.Security;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JLabel;
 
@@ -36,9 +38,12 @@ public class Node {
 	
 	private TransactionHistory _transactionPool;
 	private ArrayList<Block> _blockchain;
-	private Product _product;
+	private Product _product;		// active product
+	private Map<String,Product> _ownProducts;
 	private ProductChangeIterator _productChangeIter;
 	private Miner _miner;
+	
+	private Map<String, String> _GTINtoProductID;
 
 	private static final int _LogarithmicDifficulty = 20;
 
@@ -54,8 +59,10 @@ public class Node {
 			_transactionPool = new TransactionHistory();
 			_blockchain = new ArrayList<Block>();
 			_product = null;
+			_ownProducts = new HashMap<String,Product>();
 			_productChangeIter = null;
 			_miner = new Miner(this);
+			_GTINtoProductID = new HashMap<String, String>();
 		}
 		catch(Exception e)
 		{
@@ -160,12 +167,21 @@ public class Node {
 	{
 		_statusBar = lblStatusBar;
 	}
-	
+
 	public void createProduct()
 	{
+		createProduct("<initial product>");
+	}
+	
+	public boolean createProduct(String description)
+	{
+		boolean success = false;
+		
 		try
 		{
 			_product = new Product();
+			_ownProducts.put(productID(),_product);
+			success = true;
 			
 			// avoid mixing up products!
 			_productChangeIter = null;
@@ -176,7 +192,7 @@ public class Node {
 			{
 				synchronized (_blockchain) 
 				{
-					genesisTX = _product.generateTransaction(_transactionPool, _blockchain, "<initial product>");
+					genesisTX = _product.generateTransaction(_transactionPool, _blockchain, description);
 				}
 				
 				_transactionPool.Add(genesisTX);
@@ -191,6 +207,8 @@ public class Node {
 		{
 			System.out.println(e.getMessage());
 		}
+		
+		return success;
 	}
 	
 	public String productID()
@@ -384,13 +402,14 @@ public class Node {
 		}
 	}
 	
-	public void addNewBlock(Peer sender, Block block)
+	public boolean addNewBlock(Peer sender, Block block)
 	{
+		boolean accepted = false;
+
 		try
 		{
 			Utils.NULL_CHECK("Block", block);
 			
-			boolean accepted = false;
 			boolean requestAll = false;
 			
 			synchronized (_transactionPool) 
@@ -438,14 +457,16 @@ public class Node {
 		{
 			System.out.println(e.getMessage());
 		}
+		
+		return accepted;
 	}
 
-	public void addIncomingFullBlockchain(Peer sender, FullBlockchain fullBlockchain)
+	public boolean addIncomingFullBlockchain(Peer sender, FullBlockchain fullBlockchain)
 	{
+		boolean accepted = false;
+
 		try
 		{
-			boolean accepted = false;
-			
 			synchronized (_transactionPool) 
 			{
 				synchronized (_blockchain) 
@@ -474,6 +495,7 @@ public class Node {
 			System.out.println(e.getMessage());
 		}
 		
+		return accepted;
 	}
 	
 	public void replyToRequestAll(Peer sender)
@@ -551,5 +573,33 @@ public class Node {
 	public void displayOnStatusBar(String message)
 	{
 		_statusBar.setText(message);
+	}
+	
+	public boolean register(String GTIN, String description)
+	{
+		String productID;
+		
+		boolean success = false;
+		
+		if(!_GTINtoProductID.containsKey(GTIN) && createProduct(description))
+		{
+			_GTINtoProductID.put(GTIN, productID());
+			success = true;
+		}
+		else if(_GTINtoProductID.containsKey(GTIN))
+		{
+			productID = _GTINtoProductID.get(GTIN);
+			_product = _ownProducts.get(productID);
+			
+			generateTransaction(description);
+			success = true;
+		}
+		
+		return success;
+	}
+	
+	public void pushToGDS(ArrayList<Transaction> transactions)
+	{
+		// send to GDS
 	}
 }
