@@ -41,7 +41,10 @@ public class Miner extends Thread {
 			System.out.println("Miner : hash found (bin)=" + Utils.HexToBinary(hash));
 			System.out.println("Miner : elapsedTime=" + elapsedTime/Math.pow(10, 9) + " seconds");
 			
-			_host.addNewBlock(null, block);
+			if( _host.addNewBlock(null, block) )
+			{
+				_host.pushToGDS(block.transactions().allTransactions());
+			}
 		}
 		catch(InterruptedException e)
 		{
