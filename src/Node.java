@@ -611,8 +611,17 @@ public class Node {
 		return success;
 	}
 	
-	public void pushToGDS(ArrayList<Transaction> transactions)
+	public void pushToGDS(Block block)
 	{
+		ArrayList<Transaction> ownTXs = new ArrayList<Transaction>();
+		for(Map.Entry<String,Product> entry : _ownProducts.entrySet())
+		{
+			ownTXs.addAll( block.transactions(entry.getKey()) );
+		}
+		
+		ArrayList<Transaction> TXs = block.transactions().allTransactions();
+		TXs.removeAll(ownTXs);
+		
 		// send to GDS
 	}
 }

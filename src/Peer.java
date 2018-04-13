@@ -58,7 +58,7 @@ public class Peer extends Thread {
 					Block block = (Block)message.content;
 					if( _host.addNewBlock(this, block))
 					{
-						_host.pushToGDS(block.transactions().allTransactions());
+						_host.pushToGDS(block);
 					}
 				}
 				else if(message.type == Message.Type.FULL_BLOCKCHAIN)
@@ -68,7 +68,7 @@ public class Peer extends Thread {
 					{
 						for(Block block : fullBlockchain.blockchain())
 						{
-							_host.pushToGDS(block.transactions().allTransactions());
+							_host.pushToGDS(block);
 						}
 					}
 				}

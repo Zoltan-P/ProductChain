@@ -43,7 +43,7 @@ public class Miner extends Thread {
 			
 			if( _host.addNewBlock(null, block) )
 			{
-				_host.pushToGDS(block.transactions().allTransactions());
+				_host.pushToGDS(block);
 			}
 		}
 		catch(InterruptedException e)
