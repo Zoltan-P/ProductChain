@@ -18,7 +18,7 @@ public class Node {
 		{
 			try( ServerSocket serverSocket = new ServerSocket( _listeningPort ) )
 			{
-				while(true)
+				while( !interrupted() )
 				{
 					addPeer( serverSocket.accept() );
 				}
@@ -41,11 +41,12 @@ public class Node {
 	private Product _product;		// active product
 	private Map<String,Product> _ownProducts;
 	private ProductChangeIterator _productChangeIter;
+	private Listener _listener;
 	private Miner _miner;
 	
 	private Map<String, String> _GTINtoProductID;
 
-	private static final int _LogarithmicDifficulty = 20;
+	private static final int _LogarithmicDifficulty = 18;
 
 	public Node()
 	{
@@ -61,12 +62,24 @@ public class Node {
 			_product = null;
 			_ownProducts = new HashMap<String,Product>();
 			_productChangeIter = null;
+			_listener = new Listener();
 			_miner = new Miner(this);
 			_GTINtoProductID = new HashMap<String, String>();
 		}
 		catch(Exception e)
 		{
 			System.out.println(e.getMessage());
+		}
+	}
+	
+	public void cleanup()
+	{
+		_listener.interrupt();
+		_miner.interrupt();
+		
+		for(Peer p : _peers)
+		{
+			p.interrupt();
 		}
 	}
 	
@@ -77,7 +90,7 @@ public class Node {
 			Utils.NULL_CHECK("Port", port);
 			
 			_listeningPort = port;
-			new Listener().start();
+			_listener.start();
 			
 			System.out.println("Waiting for incoming connection requests.");
 			displayOnStatusBar("Waiting for incoming connection requests.");

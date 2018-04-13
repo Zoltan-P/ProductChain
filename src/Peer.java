@@ -44,7 +44,7 @@ public class Peer extends Thread {
 			BufferedReader reader = new BufferedReader( new InputStreamReader(input()) );
 
 			String line = null;
-			while( (line = reader.readLine()) != null ) 
+			while( (line = reader.readLine()) != null && !interrupted() ) 
 			{
 				Message message = Utils.GetMessage(line);
 				
